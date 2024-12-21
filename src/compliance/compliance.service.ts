@@ -1,18 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { ComplianceCheckDto } from './compliance-check.dto';
+import { WebScraperService } from '../utils/web-scraper.service';
+import { OpenAIService } from '../utils/openai.service';
 
 @Injectable()
 export class ComplianceService {
   constructor(
+    private readonly webScraperService: WebScraperService,
+    private readonly openAIService: OpenAIService,
   ) {}
 
   async checkCompliance(complianceCheckDto: ComplianceCheckDto) {
     try {
       // Scrape both websites
-      let websiteContent, policyContent; // to-do
+      const [websiteContent, policyContent] = await Promise.all([
+        this.webScraperService.scrapeWebpage(complianceCheckDto.websiteUrl),
+        this.webScraperService.scrapeWebpage(complianceCheckDto.policyUrl),
+      ]);
 
       // Analyze compliance using OpenAI
-      let complianceResults; // to-do
+      const complianceResults = await this.openAIService.analyzeCompliance(
+        websiteContent,
+        policyContent,
+      );
 
       return {
         status: 'success',
